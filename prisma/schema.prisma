@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  email         String   @unique
+  password      String
+  avatar        String?
+  emailVerified Boolean? @default(false)
+
+  generatedImages Image[]     @relation("GeneratedBy")
+  likedImages     ImageLike[]
+  followerCount Int @default(0)
+  followingCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Image {
+  id         String  @id @default(uuid())
+  s3Url      String
+  prompt     String  @db.Text
+  isRemixed  Boolean @default(false)
+  isShared   Boolean @default(false)
+  remixCount Int     @default(0)
+  likeCount  Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation("GeneratedBy", fields: [userId], references: [id], onDelete: Cascade)
+
+  errorMessage String?
+
+  updatedAt DateTime @updatedAt
+
+  originalImageId String?
+  originalImage   Image?  @relation("Remixes", fields: [originalImageId], references: [id], onDelete: Cascade)
+  remixes         Image[] @relation("Remixes")
+
+  likes ImageLike[]
+
+  @@index([userId])
+  @@index([isShared, createdAt])
+  @@index([originalImageId])
+}
+
+model ImageLike {
+  id        String   @id @default(cuid())
+  userId    String
+  imageId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, imageId])
+  @@index([userId])
+  @@index([imageId])
+}
