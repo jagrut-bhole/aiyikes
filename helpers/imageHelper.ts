@@ -1,28 +1,60 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   getCachedData,
   setCachedData,
-  deleteMultipleCachedData,
   CacheKeys,
   CACHE_TTL,
 } from "@/lib/cache";
 
 export type CachedImage = {
   id: string;
-  url: string;
+  s3Url: string;
   userId: string;
+  prompt: string;
+  likeCount: number;
+  remixCount: number;
   createdAt: Date;
-  updatedAt: Date;
 };
 
-export async function getImageDetailsById(
-  imageId: string,
-): Promise<CachedImage | null> {
+/**
+ * Get all shared images with Redis caching
+ */
+export async function getAllImages(): Promise<CachedImage[] | null> {
   try {
-    // TODO: Implement image retrieval logic
-    return null;
+    const cacheKey = CacheKeys.image("all");
+    const cachedImage = await getCachedData<CachedImage[]>(cacheKey);
+
+    if (cachedImage) {
+      return cachedImage;
+    }
+
+    console.log('Cache Miss for Image, so fetching from DB');
+
+    const images = await prisma.image.findMany({
+      where: {
+        isShared: true
+      },
+      select: {
+        id: true,
+        s3Url: true,
+        userId: true,
+        prompt: true,
+        likeCount: true,
+        remixCount: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    if (images.length === 0) {
+      return [];
+    }
+
+    await setCachedData(cacheKey, images, CACHE_TTL.IMAGE);
+
+    return images;
   } catch (error) {
     console.error("Error fetching image details:", error);
     return null;

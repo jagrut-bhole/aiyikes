@@ -22,9 +22,8 @@ export default function Navbar() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <Link href="/" className="flex items-center shrink-0">
-                        {/* <span className="text-2xl font-bold bg-linear-to-br from-[hsl(174_72%_56%)] to-[hsl(199_89%_48%)]  bg-clip-text text-transparent"> */}
                         <span className="text-2xl font-bold bg-clip-text text-white">
-                            ManimFlow
+                            AIYIKES
                         </span>
                     </Link>
 

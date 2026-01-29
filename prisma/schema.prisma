@@ -17,7 +17,11 @@ model User {
 
   generatedImages Image[]     @relation("GeneratedBy")
   likedImages     ImageLike[]
-  followerCount Int @default(0)
+
+  followers Follow[] @relation("Following")
+  following Follow[] @relation("Follower")
+
+  followerCount  Int @default(0)
   followingCount Int @default(0)
 
   createdAt DateTime @default(now())
@@ -67,4 +71,18 @@ model ImageLike {
   @@unique([userId, imageId])
   @@index([userId])
   @@index([imageId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }

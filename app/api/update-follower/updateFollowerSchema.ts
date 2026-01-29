@@ -1,18 +1,18 @@
-import {boolean, z} from 'zod';
+import { z } from "zod";
 
-const updateFollowRequest = z.object({
-    imageId :  z.string(),
-    action : z.enum(['follow', 'unfollow'])
+const updateFollowerRequest = z.object({
+    userId: z.string(),
+    action: z.enum(['follow', 'unfollow'])
 });
 
-export type UpdateFollowRequest = z.infer<typeof updateFollowRequest>;
+export type UpdateFollowerRequest = z.infer<typeof updateFollowerRequest>;
 
-const updateFollowResponse = z.object({
-    success : z.boolean(),
-    message : z.string(),
-    data : z.object({
-        count : z.number(),
-    })
+const updateFollowerResponse = z.object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.object({
+        isFollowing: z.boolean().optional()
+    }).optional()
 });
 
-export type UpdateFollowResponse = z.infer<typeof updateFollowResponse>;
+export type UpdateFollowerResponse = z.infer<typeof updateFollowerResponse>;
