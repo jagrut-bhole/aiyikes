@@ -3,7 +3,7 @@ import { ProfileSchemaResponse } from "./profileSchema";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/helpers/authHelper";
 
-export async function POST(
+export async function GET(
   req: NextRequest,
 ): Promise<NextResponse<ProfileSchemaResponse>> {
   try {
@@ -38,6 +38,8 @@ export async function POST(
             likeCount: true,
             remixCount: true,
             createdAt: true,
+            s3Url: true,
+            seed: true
           },
         },
       },

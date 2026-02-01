@@ -17,6 +17,8 @@ export const ProfileResponseSchema = z.object({
           likeCount: z.number(),
           remixCount: z.number(),
           createdAt: z.date(),
+          s3Url: z.string(),
+          seed: z.number(),
         }),
       ),
     })

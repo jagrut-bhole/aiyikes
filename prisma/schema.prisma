@@ -38,7 +38,7 @@ model Image {
   user       User    @relation("GeneratedBy", fields: [userId], references: [id], onDelete: Cascade)
   s3Url      String
   isRemixed  Boolean @default(false)
-  isShared   Boolean @default(false)
+  isPublic   Boolean @default(false)
   remixCount Int     @default(0)
   likeCount  Int     @default(0)
 
@@ -55,16 +55,15 @@ model Image {
   likes ImageLike[]
 
   @@index([userId])
-  @@index([isShared, createdAt])
+  @@index([isPublic, createdAt])
   @@index([originalImageId])
 }
 
 enum Model {
   flux
-  turbo
   gptimage
   nanobanana
-  seedream
+  seedance
 }
 
 model ImageLike {

@@ -29,26 +29,36 @@ export async function generateImage(options: ImageOptions): Promise<string> {
   const apiKey = process.env.POLLINATION_API_KEY;
 
   if (!apiKey) {
-    console.warn("POLLINATION_API_KEY not set - using public API");
-    return url;
+    throw new Error("POLLINATION_API_KEY is not set. Please add it to your .env file.");
   }
 
   try {
-    const response = await axios.request({
-      method: "GET",
-      url,
+    const response = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
-      maxRedirects: 5,
-      validateStatus: (status) => status >= 200 && status < 400,
-      timeout: 30000,
+      responseType: 'arraybuffer',
+      timeout: 120000,
     });
 
-    return url;
-  } catch (error) {
-    console.error("Error with authenticated Pollination API:", error);
-    console.log("Falling back to public URL");
-    return url;
+    const base64 = Buffer.from(response.data, 'binary').toString('base64');
+    const contentType = response.headers['content-type'] || 'image/png';
+    const dataUrl = `data:${contentType};base64,${base64}`;
+
+    console.log("Image generated successfully");
+    return dataUrl;
+
+  } catch (error: any) {
+    console.error("Error generating image with Pollination API:", error.message);
+
+    if (error.response?.status === 401) {
+      throw new Error("Invalid API key. Please check your POLLINATION_API_KEY.");
+    }
+
+    if (error.code === 'ECONNABORTED') {
+      throw new Error("Image generation timed out. Please try again.");
+    }
+
+    throw new Error("Failed to generate image. Please try again.");
   }
 }

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { AuthSchema, AuthSchemaRequest } from "@/types/authSchema/AuthSchema";
+import { AuthSchema } from "@/types/authSchema/AuthSchema";
 import { toast } from "sonner";
 
 export default function LoginPage() {

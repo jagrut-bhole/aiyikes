@@ -1,7 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import {
   ChangePasswordRequest,
@@ -16,9 +14,9 @@ export async function POST(
   req: NextRequest,
 ): Promise<NextResponse<ChangePasswordResponse>> {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getAuthenticatedUser();
 
-    if (!session?.user) {
+    if (!user || !user.email) {
       return NextResponse.json(
         {
           success: false,
@@ -30,17 +28,17 @@ export async function POST(
       );
     }
 
-    const user = await prisma.user.findUnique({
+    const dbUser = await prisma.user.findUnique({
       where: {
-        email: session.user.email,
+        email: user.email,
       },
     });
 
-    if (!user) {
+    if (!dbUser || !dbUser.password) {
       return NextResponse.json(
         {
           success: false,
-          message: "Unauthorized Request",
+          message: "User not found or invalid account type",
         },
         {
           status: 401,
@@ -62,13 +60,13 @@ export async function POST(
       );
     }
 
-    const { password }: ChangePasswordRequest = body;
+    const { currentPassword, newPassword }: ChangePasswordRequest = body;
 
-    if (!password) {
+    if (!currentPassword || !newPassword) {
       return NextResponse.json(
         {
           success: false,
-          message: "Password is required",
+          message: "Current password and new password are required",
         },
         {
           status: 400,
@@ -76,13 +74,14 @@ export async function POST(
       );
     }
 
-    const hashedPassword = await bcrypt.compare(password, user.password);
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, dbUser.password);
 
-    if (!hashedPassword) {
+    if (!isPasswordValid) {
       return NextResponse.json(
         {
           success: false,
-          message: "Invalid Password",
+          message: "Current password is incorrect",
         },
         {
           status: 401,
@@ -90,18 +89,19 @@ export async function POST(
       );
     }
 
-    user.password = await bcrypt.hash(password, 10);
+    // Hash and update new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
     await prisma.user.update({
       where: {
         id: user.id,
       },
       data: {
-        password: user.password,
+        password: hashedNewPassword,
       },
     });
 
-    await invalidateUserCache(user.id, user.email);
+    await invalidateUserCache(user.id, dbUser.email);
 
     return NextResponse.json(
       {

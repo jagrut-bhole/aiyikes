@@ -1,20 +1,19 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-export const allImageSchemaResponse = z.object({
+export const allImageSchema = z.object({
   success: z.boolean(),
   message: z.string(),
-  data: z
-    .object({
-      id: z.string(),
-      s3Url: z.string(),
-      userId: z.string(),
-      prompt: z.string(),
-      likeCount: z.number(),
-      remixCount: z.number(),
-      createdAt: z.date(),
-    })
-    .array()
-    .optional(),
-});
+  data: z.array(z.object({
+    id: z.string(),
+    prompt: z.string(),
+    s3Url: z.string(),
+    model: z.string(),
+    seed: z.number(),
+    isPublic: z.boolean(),
+    likeCount: z.number(),
+    remixCount: z.number(),
+    createdAt: z.date(),
+  })).optional()
+})
 
-export type AllImageSchemaResponse = z.infer<typeof allImageSchemaResponse>;
+export type AllImageSchemaResponse = z.infer<typeof allImageSchema>;

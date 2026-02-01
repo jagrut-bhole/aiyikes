@@ -1,11 +1,10 @@
-import { NextResponse, NextRequest } from "next/server";
 import { AllImageSchemaResponse } from "./allImageSchema";
-import { getAuthenticatedUser } from "@/helpers/authHelper";
+import { prisma } from '@/lib/prisma';
+import { NextResponse, NextRequest } from "next/server";
 import { getAllImages } from "@/helpers/imageHelper";
+import { getAuthenticatedUser } from "@/helpers/authHelper";
 
-export async function GET(
-  req: NextRequest,
-): Promise<NextResponse<AllImageSchemaResponse>> {
+export async function GET(req: NextRequest): Promise<NextResponse<AllImageSchemaResponse>> {
   try {
     const user = await getAuthenticatedUser();
 
@@ -13,45 +12,45 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message: "User not found",
+          message: "Unauthorized Request"
         },
-        { status: 404 },
+        {
+          status: 401
+        }
       );
-    }
+    };
 
     const images = await getAllImages();
 
-    if (images === null) {
+    if (!images) {
       return NextResponse.json(
         {
           success: false,
-          message: "Error fetching images",
+          message: "No images found"
         },
-        { status: 500 },
-      );
+        {
+          status: 401
+        }
+      )
     }
 
     return NextResponse.json(
       {
         success: true,
-        message:
-          images.length > 0
-            ? "Images fetched successfully!!"
-            : "No images found",
-        data: images,
-      },
-      {
-        status: 200,
-      },
-    );
+        message: images.length > 0 ? "Images fetched successfully" : "No images found",
+        data: images
+      }
+    )
   } catch (error) {
-    console.log("Error fetching the images :", error);
+    console.log("Server Error while fecthing the images: ",error);
     return NextResponse.json(
       {
-        success: false,
-        message: "Error fetching the images",
+        success : false,
+        message: "Server Error in fetching the images"
       },
-      { status: 500 },
-    );
+      {
+        status : 500
+      }
+    )
   }
 }

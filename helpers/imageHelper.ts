@@ -8,9 +8,11 @@ import {
 
 export type CachedImage = {
   id: string;
-  s3Url: string;
-  userId: string;
   prompt: string;
+  s3Url: string;
+  model: string;
+  seed: number;
+  isPublic: boolean;
   likeCount: number;
   remixCount: number;
   createdAt: Date;
@@ -29,13 +31,15 @@ export async function getAllImages(): Promise<CachedImage[] | null> {
 
     const images = await prisma.image.findMany({
       where: {
-        isShared: true,
+        isPublic: true,
       },
       select: {
         id: true,
-        s3Url: true,
-        userId: true,
         prompt: true,
+        s3Url: true,
+        model: true,
+        seed: true,
+        isPublic: true,
         likeCount: true,
         remixCount: true,
         createdAt: true,

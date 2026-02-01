@@ -10,24 +10,21 @@ import { generateImage } from "@/services/pollinationServices";
 export async function POST(
   req: NextRequest,
 ): Promise<NextResponse<GenerateImageResponse>> {
+
   try {
-    // const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUser();
 
-    // if (!user) {
-    //     return NextResponse.json(
-    //         {
-    //             success: false,
-    //             message: "Unauthorized Request"
-    //         },
-    //         {
-    //             status: 400
-    //         }
-    //     )
-    // }
-
-    const user = {
-      id: "61cac4d9-11b8-4dab-946b-58718ece140a",
-    };
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized Request"
+        },
+        {
+          status: 401
+        }
+      )
+    }
 
     const body = await req.json();
 
@@ -47,7 +44,7 @@ export async function POST(
 
     const seed = Math.floor(Math.random() * 1000000);
 
-    const { prompt, model } = body;
+    const { prompt, model, isPublic } = body;
 
     const imageUrl = await generateImage({
       prompt,
@@ -62,7 +59,7 @@ export async function POST(
         model,
         seed,
         s3Url: imageUrl,
-        isShared: true,
+        isPublic,
         isRemixed: false,
         remixCount: 0,
         likeCount: 0,
@@ -80,12 +77,13 @@ export async function POST(
         status: 200,
       },
     );
-  } catch (error) {
+  } catch (error: any) {
     console.log("Error while generating the image: ", error);
+    const errorMessage = error?.message || "Server Error while generating the image";
     return NextResponse.json(
       {
         success: false,
-        message: "Server Error while generating the image",
+        message: errorMessage,
       },
       {
         status: 500,
