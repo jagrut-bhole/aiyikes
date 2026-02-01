@@ -3,7 +3,8 @@ import { z } from "zod";
 export const ProfileResponseSchema = z.object({
   success: z.boolean(),
   message: z.string(),
-  data: z.object({
+  data: z
+    .object({
       id: z.string(),
       name: z.string(),
       email: z.string(),

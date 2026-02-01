@@ -13,7 +13,6 @@ model User {
   email         String   @unique
   password      String
   avatar        String?
-  emailVerified Boolean? @default(false)
 
   generatedImages Image[]     @relation("GeneratedBy")
   likedImages     ImageLike[]
@@ -32,17 +31,18 @@ model User {
 
 model Image {
   id         String  @id @default(uuid())
-  s3Url      String
+  userId     String
   prompt     String  @db.Text
+  model      Model   @default(flux)
+  seed       Int     @unique
+  user       User    @relation("GeneratedBy", fields: [userId], references: [id], onDelete: Cascade)
+  s3Url      String
   isRemixed  Boolean @default(false)
   isShared   Boolean @default(false)
   remixCount Int     @default(0)
   likeCount  Int     @default(0)
 
   createdAt DateTime @default(now())
-
-  userId String
-  user   User   @relation("GeneratedBy", fields: [userId], references: [id], onDelete: Cascade)
 
   errorMessage String?
 
@@ -57,6 +57,14 @@ model Image {
   @@index([userId])
   @@index([isShared, createdAt])
   @@index([originalImageId])
+}
+
+enum Model {
+  flux
+  turbo
+  gptimage
+  nanobanana
+  seedream
 }
 
 model ImageLike {

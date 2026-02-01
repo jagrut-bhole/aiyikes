@@ -59,7 +59,6 @@ export async function POST(
         name: name,
         email: email,
         password: hashedPassword,
-        emailVerified: false,
         avatar: "",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -71,7 +70,6 @@ export async function POST(
       email: newUser.email,
       name: newUser.name,
       avatar: newUser.avatar,
-      emailVerified: newUser.emailVerified,
       createdAt: newUser.createdAt,
       updatedAt: newUser.updatedAt,
     };

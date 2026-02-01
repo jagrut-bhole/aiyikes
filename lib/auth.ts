@@ -92,7 +92,7 @@ export const authOptions: NextAuthOptions = {
                 email: user.email,
                 avatar: user.image,
                 name: user.name || user.email.split("@")[0],
-                password: "", // Google users don't have password
+                password: "",
               },
             });
           }

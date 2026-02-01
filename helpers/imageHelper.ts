@@ -16,9 +16,6 @@ export type CachedImage = {
   createdAt: Date;
 };
 
-/**
- * Get all shared images with Redis caching
- */
 export async function getAllImages(): Promise<CachedImage[] | null> {
   try {
     const cacheKey = CacheKeys.image("all");
@@ -28,11 +25,11 @@ export async function getAllImages(): Promise<CachedImage[] | null> {
       return cachedImage;
     }
 
-    console.log('Cache Miss for Image, so fetching from DB');
+    console.log("Cache Miss for Image, so fetching from DB");
 
     const images = await prisma.image.findMany({
       where: {
-        isShared: true
+        isShared: true,
       },
       select: {
         id: true,
@@ -44,8 +41,8 @@ export async function getAllImages(): Promise<CachedImage[] | null> {
         createdAt: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     if (images.length === 0) {
