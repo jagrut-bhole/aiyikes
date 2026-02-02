@@ -5,7 +5,7 @@ import { Header } from "@/components/Gallery/Header";
 import { InteractiveImageBentoGallery } from "@/components/ui/react-tailwind-image-gallery";
 import ImageDetailModal from "@/components/Gallery/ImageDetailModal";
 import { getAllImages, GalleryImage } from "@/apis/gallery/galleryApi";
-import { Loader2 } from "lucide-react";
+import { OrbitalLoader } from "@/components/ui/orbital-loader";
 
 interface DisplayImage {
     id: string;
@@ -15,7 +15,6 @@ interface DisplayImage {
     span: string;
 }
 
-// Pattern for spans that repeats
 const spanPattern = [
     "md:col-span-2 md:row-span-2",  // 1 (large)
     "md:row-span-1",                 // 2
@@ -37,48 +36,60 @@ const getSpanForIndex = (index: number): string => {
 
 export default function GalleryPage() {
     const [images, setImages] = useState<DisplayImage[]>([]);
-    const [selectedImage, setSelectedImage] = useState<{ src: string; title: string } | null>(null);
+    const [rawImages, setRawImages] = useState<GalleryImage[]>([]);
+    const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>("");
 
-    useEffect(() => {
-        const fetchImages = async () => {
-            try {
-                setLoading(true);
-                const response = await getAllImages();
+    const fetchImages = async () => {
+        try {
+            setLoading(true);
+            const response = await getAllImages();
 
-                if (response.success && response.data) {
-                    const formattedImages: DisplayImage[] = response.data.map(
-                        (img: GalleryImage, index: number) => ({
-                            id: img.id,
-                            title: img.prompt.length > 30
-                                ? img.prompt.substring(0, 30) + "..."
-                                : img.prompt,
-                            desc: `${img.model} • ${img.likeCount} likes`,
-                            url: img.s3Url,
-                            span: getSpanForIndex(index),
-                        })
-                    );
-                    setImages(formattedImages);
-                } else {
-                    setError(response.message || "Failed to load images");
-                }
-            } catch (err) {
-                console.error("Error loading gallery:", err);
-                setError("Failed to load gallery");
-            } finally {
-                setLoading(false);
+            if (response.success && response.data) {
+                setRawImages(response.data);
+                const formattedImages: DisplayImage[] = response.data.map(
+                    (img: GalleryImage, index: number) => ({
+                        id: img.id,
+                        title: img.prompt.length > 30
+                            ? img.prompt.substring(0, 30) + "..."
+                            : img.prompt,
+                        desc: `${img.model} • ${img.likeCount} likes`,
+                        url: img.s3Url,
+                        span: getSpanForIndex(index),
+                    })
+                );
+                setImages(formattedImages);
+            } else {
+                setError(response.message || "Failed to load images");
             }
-        };
+        } catch (err) {
+            console.error("Error loading gallery:", err);
+            setError("Failed to load gallery");
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchImages();
     }, []);
 
     const openModal = (src: string, title: string) => {
-        setSelectedImage({ src, title });
+        // Find the image by URL to get the ID
+        const image = rawImages.find(img => img.s3Url === src);
+        if (image) {
+            setSelectedImageId(image.id);
+        }
     };
 
-    const closeModal = () => setSelectedImage(null);
+    const closeModal = () => {
+        setSelectedImageId(null);
+        // Refresh images to get updated like counts
+        fetchImages();
+    };
+
+    const selectedImage = rawImages.find(img => img.id === selectedImageId);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -94,9 +105,8 @@ export default function GalleryPage() {
             <main className="pt-16">
                 {/* Loading State */}
                 {loading && (
-                    <div className="flex items-center justify-center py-32">
-                        <Loader2 className="w-8 h-8 animate-spin text-white" />
-                        <span className="ml-3 text-neutral-400">Loading gallery...</span>
+                    <div className="fixed inset-0 flex items-center justify-center bg-black z-50">
+                        <OrbitalLoader message="Loading Gallery..." messagePlacement="bottom" color="white" />
                     </div>
                 )}
 
@@ -129,8 +139,7 @@ export default function GalleryPage() {
 
                 {/* Image Detail Modal */}
                 <ImageDetailModal
-                    src={selectedImage?.src || null}
-                    title={selectedImage?.title || ""}
+                    imageData={selectedImage || null}
                     onClose={closeModal}
                 />
             </main>

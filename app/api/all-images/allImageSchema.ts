@@ -9,6 +9,7 @@ export const allImageSchema = z.object({
     s3Url: z.string(),
     model: z.string(),
     seed: z.number(),
+    userId: z.string(),
     isPublic: z.boolean(),
     likeCount: z.number(),
     remixCount: z.number(),

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Loader2, Wand2, Download, Image as ImageIcon, ChevronDown, Globe, Lock, Check, RefreshCw } from 'lucide-react';
 import { generateImage, GenerateImageResponse } from "@/apis/image/imageApi";
 import { toast } from "sonner";
+import { Header } from "@/components/Gallery/Header";
 
 export default function GeneratePage() {
 
@@ -102,9 +103,10 @@ export default function GeneratePage() {
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     return (
-        <div className="w-full h-[calc(100vh-80px)] bg-[#050505] overflow-hidden flex flex-col lg:flex-row">
+        <div className="w-full h-[calc(100vh-80px)] bg-[#050505] overflow-hidden flex flex-col lg:flex-row min-h-screen">
+            <Header />
 
-            {/* Left Panel: Prompt Input & Controls */}
+
             <div className="w-full lg:w-[480px] h-full flex flex-col z-10 bg-[#050505]">
                 <div className="flex-1 flex flex-col justify-center px-8 py-8 overflow-y-auto">
                     <header className="mb-8">
@@ -113,7 +115,7 @@ export default function GeneratePage() {
                     </header>
 
                     <div className="flex flex-col gap-6">
-                        {/* Prompt Area */}
+
                         <div className="space-y-3">
                             <label className="text-xs font-bold uppercase tracking-widest text-neutral-600 flex justify-between">
                                 <span>Vision Prompt</span>
@@ -130,9 +132,8 @@ export default function GeneratePage() {
                             />
                         </div>
 
-                        {/* Controls Row: Model Dropdown & Public Toggle */}
                         <div className="grid grid-cols-2 gap-4">
-                            {/* Model Dropdown */}
+
                             <div className="relative" ref={dropdownRef}>
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2 block">Model</label>
                                 <button
@@ -150,7 +151,6 @@ export default function GeneratePage() {
                                     <ChevronDown className={cn("w-4 h-4 text-neutral-500 transition-transform", isModelDropdownOpen ? "rotate-180" : "")} />
                                 </button>
 
-                                {/* Dropdown Menu */}
                                 {isModelDropdownOpen && (
                                     <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                                         {IMAGE_MODELS.map((model) => (
@@ -178,7 +178,6 @@ export default function GeneratePage() {
                                 )}
                             </div>
 
-                            {/* Public Toggle */}
                             <div>
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2 block">Visibility</label>
                                 <button
@@ -198,7 +197,6 @@ export default function GeneratePage() {
                                         </div>
                                     </div>
 
-                                    {/* Switch UI */}
                                     <div className={cn("w-10 h-6 rounded-full p-1 transition-colors flex items-center", isPublic ? "bg-green-500/20" : "bg-neutral-800")}>
                                         <div className={cn("w-4 h-4 rounded-full shadow-sm transition-all", isPublic ? "bg-green-500 translate-x-4" : "bg-neutral-500 translate-x-0")} />
                                     </div>
@@ -229,15 +227,12 @@ export default function GeneratePage() {
                 </div>
             </div>
 
-            {/* Partition Line (Desktop) */}
             <div className="hidden lg:block w-px bg-neutral-900 h-full relative z-20">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-24 bg-neutral-800 rounded-full" />
             </div>
 
-            {/* Right Panel: Display Area (Centered) */}
             <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 bg-[#050505] relative overflow-hidden">
 
-                {/* Background Ambient Glow */}
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/5 rounded-full blur-[120px] opacity-20" />
                 </div>

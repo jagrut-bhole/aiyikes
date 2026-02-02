@@ -38,6 +38,7 @@ export const authOptions: NextAuthOptions = {
             email: true,
             name: true,
             password: true,
+            avatar: true,
           },
         });
 
@@ -58,6 +59,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
+          image: user.avatar || undefined,
         };
       },
     }),
@@ -107,14 +109,17 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
 
-    jwt: async ({ token, user, account }) => {
+    jwt: async ({ token, user, account, trigger }) => {
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
+        token.avatar = user.image || undefined;
       }
 
-      if (account?.provider === "google" && token.email) {
+      // Always fetch fresh avatar from database on session access
+      // This ensures avatar updates are reflected immediately
+      if (token.email && !user) {
         const dbUser = await prisma.user.findUnique({
           where: {
             email: token.email as string,

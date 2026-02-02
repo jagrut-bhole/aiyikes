@@ -44,9 +44,7 @@ export async function POST(
       {
         success: true,
         message: "Follow status retrieved successfully",
-        data: {
-          isFollowing: following,
-        },
+        isFollowing: following,
       },
       {
         status: 200,

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { userProfile, changePassword } from "@/apis/auth/authApi";
+import { uploadAvatar, getUserImages, UserImage } from "@/apis/user/userApi";
 import { ProfileSchemaResponse } from "@/app/api/user/profile/profileSchema";
 import { toast } from "sonner";
 import { signOut, useSession } from "next-auth/react";
@@ -16,13 +17,14 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Header } from "@/components/Gallery/Header";
-import { Lock, Mail, User } from "lucide-react";
+import { Lock, Mail, User, Camera, Download, Heart, Repeat2, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import { AvatarUploader } from "@/components/ui/avatar-uploader";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function ProfilePage() {
 
-    const { data: session, status } = useSession();
+    const { data: session, status, update } = useSession();
 
     const router = useRouter();
 
@@ -36,6 +38,8 @@ export default function ProfilePage() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [changingPassword, setChangingPassword] = useState(false);
+    const [avatarUrl, setAvatarUrl] = useState<string>("");
+    const [userImages, setUserImages] = useState<UserImage[]>([]);
 
     const fetchProfile = async () => {
         setLoading(true);
@@ -45,6 +49,7 @@ export default function ProfilePage() {
             if (response.success) {
                 toast.success("User Profile fetched successfully");
                 setProfile(response.data ?? null);
+                setAvatarUrl(response.data?.avatar || "");
             }
         } catch (error) {
             setError("Failed to fetch user profile: " + error);
@@ -57,6 +62,29 @@ export default function ProfilePage() {
     const handleLogout = () => {
         signOut();
         router.push('/');
+    }
+
+    const handleAvatarUpload = async (file: File) => {
+        try {
+            const result = await uploadAvatar(file);
+            if (result.success && result.avatarUrl) {
+                setAvatarUrl(result.avatarUrl);
+                toast.success("Avatar updated successfully!");
+
+                // Reload page to refresh session with new avatar
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+
+                return { success: true };
+            }
+            toast.error("Failed to upload avatar");
+            return { success: false };
+        } catch (error) {
+            console.error("Avatar upload error:", error);
+            toast.error("Failed to upload avatar");
+            return { success: false };
+        }
     }
 
     const handleChangePassword = async () => {
@@ -105,8 +133,20 @@ export default function ProfilePage() {
         }
     }
 
+    const fetchImages = async () => {
+        try {
+            const response = await getUserImages();
+            if (response.success && response.data) {
+                setUserImages(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching user images:", error);
+        }
+    };
+
     useEffect(() => {
         fetchProfile();
+        fetchImages();
     }, []);
 
     if (status === 'loading' || !user || loading) {
@@ -147,6 +187,30 @@ export default function ProfilePage() {
                         </h2>
 
                         <div className="space-y-6">
+                            {/* Avatar Upload */}
+                            <div className="flex items-center justify-center py-6 border-b border-neutral-800">
+                                <AvatarUploader onUpload={handleAvatarUpload}>
+                                    <div className="relative group cursor-pointer">
+                                        <Avatar className="h-24 w-24 border-2 border-neutral-700 hover:border-white transition-colors">
+                                            <AvatarImage
+                                                src={avatarUrl || profile?.avatar || `https://images.unsplash.com/photo-1567446537708-ac4aa75c9c28?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D || 'user'}`}
+                                                alt={profile?.name || "User avatar"}
+                                            />
+                                            <AvatarFallback className="bg-neutral-800 text-white text-2xl">
+                                                {profile?.name?.charAt(0).toUpperCase() || "U"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Camera className="w-6 h-6 text-white" />
+                                        </div>
+                                    </div>
+                                </AvatarUploader>
+                                <div className="ml-4">
+                                    <p className="text-white font-medium">Profile Picture</p>
+                                    <p className="text-sm text-neutral-500">Click to upload new avatar</p>
+                                </div>
+                            </div>
+
                             {/* Name */}
                             <div className="flex items-center justify-between py-4 border-b border-neutral-800">
                                 <div className="flex items-center gap-4">
@@ -155,9 +219,7 @@ export default function ProfilePage() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-neutral-500">Name</p>
-                                        <p className="text-white font-medium">
-                                            {profile?.name || "User"}
-                                        </p>
+                                        <p className="text-white font-medium">{profile?.name || "Not set"}</p>
                                     </div>
                                 </div>
                             </div>
@@ -170,9 +232,7 @@ export default function ProfilePage() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-neutral-500">Email</p>
-                                        <p className="text-white font-medium">
-                                            {profile?.email || "email@example.com"}
-                                        </p>
+                                        <p className="text-white font-medium">{profile?.email || "Not set"}</p>
                                     </div>
                                 </div>
                             </div>
@@ -185,29 +245,20 @@ export default function ProfilePage() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-neutral-500">Password</p>
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-white font-medium">
-                                                {"••••••••••••"}
-                                            </p>
-                                        </div>
+                                        <p className="text-white font-medium">••••••••</p>
                                     </div>
                                 </div>
-
-                                <Dialog
-                                    open={changePasswordOpen}
-                                    onOpenChange={setChangePasswordOpen}
-                                >
+                                <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
                                     <DialogTrigger asChild>
-                                        <button className="cursor-pointer text-sm font-medium text-white hover:text-neutral-300 transition-colors">
+                                        <button className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors">
                                             Change Password
                                         </button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-md">
+                                    <DialogContent className="bg-[#0a0a0a] border-neutral-800">
                                         <DialogHeader>
-                                            <DialogTitle>Change Password</DialogTitle>
-                                            <DialogDescription>
-                                                Enter your current password and a new password to update
-                                                your credentials.
+                                            <DialogTitle className="text-white">Change Password</DialogTitle>
+                                            <DialogDescription className="text-neutral-400">
+                                                Enter your current password and choose a new one
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="space-y-4 py-4">
@@ -283,13 +334,102 @@ export default function ProfilePage() {
                                     My Creations
                                 </h2>
                                 <p className="text-neutral-400">
-                                    Your generated Manim animations
+                                    Your AI-generated images
                                 </p>
                             </div>
                             <span className="text-sm text-neutral-500">
-                                {profile?.generatedImages?.length || 0} creations
+                                {userImages.length} creations
                             </span>
                         </div>
+
+                        {/* Image Grid */}
+                        {userImages.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {userImages.map((image, index) => (
+                                    <motion.div
+                                        key={image.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.1 * index }}
+                                        className="bg-[#0a0a0a] border border-neutral-800 rounded-xl overflow-hidden hover:border-neutral-700 transition-colors group"
+                                    >
+                                        {/* Image */}
+                                        <div className="aspect-square relative overflow-hidden">
+                                            <img
+                                                src={image.s3Url}
+                                                alt={image.prompt}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                        </div>
+
+                                        {/* Details */}
+                                        <div className="p-4 space-y-3">
+                                            {/* Model badge */}
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-neutral-800 text-neutral-300">
+                                                    {image.model}
+                                                </span>
+                                                <span className="text-xs text-neutral-500">
+                                                    {new Date(image.createdAt).toLocaleDateString()}
+                                                </span>
+                                            </div>
+
+                                            {/* Prompt */}
+                                            <p className="text-sm text-neutral-400 line-clamp-2">
+                                                {image.prompt}
+                                            </p>
+
+                                            {/* Stats */}
+                                            <div className="flex items-center gap-4 pt-2 border-t border-neutral-800">
+                                                <div className="flex items-center gap-1 text-neutral-500 text-sm">
+                                                    <Heart className="w-4 h-4" />
+                                                    <span>{image.likeCount}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 text-neutral-500 text-sm">
+                                                    <Repeat2 className="w-4 h-4" />
+                                                    <span>{image.remixCount}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Download Button */}
+                                            <button
+                                                onClick={() => {
+                                                    const link = document.createElement('a');
+                                                    link.href = image.s3Url;
+                                                    link.download = `aiyikes-${image.id}.jpg`;
+                                                    link.target = '_blank';
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                }}
+                                                className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-medium transition-colors"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                                Download
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-[#0a0a0a] border border-neutral-800 rounded-xl p-12 text-center">
+                                <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-4">
+                                    <User2 className="w-8 h-8 text-neutral-500" />
+                                </div>
+                                <h3 className="text-lg font-medium text-white mb-2">
+                                    No creations yet
+                                </h3>
+                                <p className="text-neutral-500 mb-4">
+                                    Start creating AI-generated images to see them here
+                                </p>
+                                <button
+                                    onClick={() => router.push('/create')}
+                                    className="px-6 py-2.5 rounded-lg bg-white text-black font-medium hover:bg-neutral-200 transition-colors"
+                                >
+                                    Create Your First Image
+                                </button>
+                            </div>
+                        )}
                     </motion.div>
                 </div>
             </main>

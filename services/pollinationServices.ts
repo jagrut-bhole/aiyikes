@@ -6,7 +6,18 @@ export interface ImageOptions {
   seed?: number;
 }
 
-export async function generateImage(options: ImageOptions): Promise<string> {
+export interface RemixImageOptions {
+  prompt: string;
+  originalImageUrl: string; // The pollination URL of the original image
+  seed: number;
+}
+
+export interface GeneratedImageResult {
+  base64DataUrl: string;
+  pollinationUrl: string;
+}
+
+export async function generateImage(options: ImageOptions): Promise<GeneratedImageResult> {
   const { prompt, model, seed } = options;
 
   const encodedPrompt = encodeURIComponent(prompt);
@@ -43,10 +54,13 @@ export async function generateImage(options: ImageOptions): Promise<string> {
 
     const base64 = Buffer.from(response.data, 'binary').toString('base64');
     const contentType = response.headers['content-type'] || 'image/png';
-    const dataUrl = `data:${contentType};base64,${base64}`;
+    const base64DataUrl = `data:${contentType};base64,${base64}`;
 
     console.log("Image generated successfully");
-    return dataUrl;
+    return {
+      base64DataUrl,
+      pollinationUrl: url,
+    };
 
   } catch (error: any) {
     console.error("Error generating image with Pollination API:", error.message);
@@ -60,5 +74,65 @@ export async function generateImage(options: ImageOptions): Promise<string> {
     }
 
     throw new Error("Failed to generate image. Please try again.");
+  }
+}
+
+export async function generateRemixImage(options: RemixImageOptions): Promise<GeneratedImageResult> {
+  const { prompt, originalImageUrl, seed } = options;
+
+  const encodedPrompt = encodeURIComponent(prompt);
+  const encodedImageUrl = encodeURIComponent(originalImageUrl);
+
+  // Build the remix URL with nanobanana model
+  let url = `https://gen.pollinations.ai/image/${encodedPrompt}`;
+
+  const params = new URLSearchParams({
+    model: "nanobanana",
+    seed: seed.toString(),
+    image: originalImageUrl,
+    nologo: "true",
+  });
+
+  url += `?${params.toString()}`;
+
+  const apiKey = process.env.POLLINATION_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("POLLINATION_API_KEY is not set. Please add it to your .env file.");
+  }
+
+  try {
+    console.log("Generating remix with URL:", url);
+
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+      responseType: 'arraybuffer',
+      timeout: 180000, // 3 minutes for remix as it may take longer
+    });
+
+    const base64 = Buffer.from(response.data, 'binary').toString('base64');
+    const contentType = response.headers['content-type'] || 'image/png';
+    const base64DataUrl = `data:${contentType};base64,${base64}`;
+
+    console.log("Remix image generated successfully");
+    return {
+      base64DataUrl,
+      pollinationUrl: url,
+    };
+
+  } catch (error: any) {
+    console.error("Error generating remix image with Pollination API:", error.message);
+
+    if (error.response?.status === 401) {
+      throw new Error("Invalid API key. Please check your POLLINATION_API_KEY.");
+    }
+
+    if (error.code === 'ECONNABORTED') {
+      throw new Error("Remix generation timed out. Please try again.");
+    }
+
+    throw new Error("Failed to generate remix. Please try again.");
   }
 }

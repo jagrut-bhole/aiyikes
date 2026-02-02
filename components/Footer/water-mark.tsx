@@ -6,8 +6,8 @@ export default function WaterMark() {
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Massive Background Text - Adjusted for better visibility */}
-        <div className="flex justify-center mb-5">
-          <h2 className="text-[12vw] font-black tracking-tighter leading-none select-none pointer-events-none bg-linear-to-b from-slate-400/40 via-slate-700/20 to-transparent bg-clip-text text-transparent uppercase">
+        <div className="flex justify-center mb-8">
+          <h2 className="text-[12vw] font-black tracking-tighter leading-none select-none pointer-events-none bg-linear-to-b from-slate-400/40 via-slate-600/20 to-transparent bg-clip-text text-transparent uppercase">
             AIYIKES
           </h2>
         </div>

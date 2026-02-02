@@ -1,7 +1,7 @@
 import { AllImageSchemaResponse } from "./allImageSchema";
 import { prisma } from '@/lib/prisma';
 import { NextResponse, NextRequest } from "next/server";
-import { getAllImages } from "@/helpers/imageHelper";
+import { getAllImagesWithCreator } from "@/helpers/imageHelper";
 import { getAuthenticatedUser } from "@/helpers/authHelper";
 
 export async function GET(req: NextRequest): Promise<NextResponse<AllImageSchemaResponse>> {
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<AllImageSchema
       );
     };
 
-    const images = await getAllImages();
+    const images = await getAllImagesWithCreator(user.id);
 
     if (!images) {
       return NextResponse.json(
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<AllImageSchema
           message: "No images found"
         },
         {
-          status: 401
+          status: 404
         }
       )
     }
@@ -42,14 +42,14 @@ export async function GET(req: NextRequest): Promise<NextResponse<AllImageSchema
       }
     )
   } catch (error) {
-    console.log("Server Error while fecthing the images: ",error);
+    console.log("Server Error while fectching the images: ", error);
     return NextResponse.json(
       {
-        success : false,
+        success: false,
         message: "Server Error in fetching the images"
       },
       {
-        status : 500
+        status: 500
       }
     )
   }

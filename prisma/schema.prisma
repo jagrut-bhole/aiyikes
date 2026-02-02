@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  email         String   @unique
-  password      String
-  avatar        String?
+  id       String  @id @default(uuid())
+  name     String  @unique
+  email    String  @unique
+  password String
+  avatar   String?
 
-  generatedImages Image[]     @relation("GeneratedBy")
+  generatedImages Image[]      @relation("GeneratedBy")
   likedImages     ImageLike[]
+  remixImages     RemixImage[]
 
   followers Follow[] @relation("Following")
   following Follow[] @relation("Follower")
@@ -30,17 +31,18 @@ model User {
 }
 
 model Image {
-  id         String  @id @default(uuid())
-  userId     String
-  prompt     String  @db.Text
-  model      Model   @default(flux)
-  seed       Int     @unique
-  user       User    @relation("GeneratedBy", fields: [userId], references: [id], onDelete: Cascade)
-  s3Url      String
-  isRemixed  Boolean @default(false)
-  isPublic   Boolean @default(false)
-  remixCount Int     @default(0)
-  likeCount  Int     @default(0)
+  id             String  @id @default(uuid())
+  userId         String
+  prompt         String  @db.Text
+  model          Model   @default(flux)
+  seed           Int     @unique
+  user           User    @relation("GeneratedBy", fields: [userId], references: [id], onDelete: Cascade)
+  s3Url          String
+  pollinationUrl String? // Original Pollinations URL for remix feature
+  isRemixed      Boolean @default(false)
+  isPublic       Boolean @default(false)
+  remixCount     Int     @default(0)
+  likeCount      Int     @default(0)
 
   createdAt DateTime @default(now())
 
@@ -52,10 +54,31 @@ model Image {
   originalImage   Image?  @relation("Remixes", fields: [originalImageId], references: [id], onDelete: Cascade)
   remixes         Image[] @relation("Remixes")
 
-  likes ImageLike[]
+  likes       ImageLike[]
+  remixImages RemixImage[] @relation("OriginalImage")
 
   @@index([userId])
   @@index([isPublic, createdAt])
+  @@index([originalImageId])
+}
+
+model RemixImage {
+  id              String @id @default(uuid())
+  userId          String
+  originalImageId String
+  remixPrompt     String @db.Text
+  originalPrompt  String @db.Text
+  pollinationUrl  String
+  s3Url           String
+  seed            Int
+
+  user          User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  originalImage Image @relation("OriginalImage", fields: [originalImageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
   @@index([originalImageId])
 }
 

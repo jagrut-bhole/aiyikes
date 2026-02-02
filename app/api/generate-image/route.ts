@@ -46,7 +46,7 @@ export async function POST(
 
     const { prompt, model, isPublic } = body;
 
-    const imageUrl = await generateImage({
+    const result = await generateImage({
       prompt,
       model,
       seed,
@@ -58,7 +58,8 @@ export async function POST(
         prompt,
         model,
         seed,
-        s3Url: imageUrl,
+        s3Url: result.base64DataUrl,
+        pollinationUrl: result.pollinationUrl,
         isPublic,
         isRemixed: false,
         remixCount: 0,
@@ -70,7 +71,7 @@ export async function POST(
       {
         success: true,
         message: "Image generated successfully",
-        imageUrl,
+        imageUrl: result.base64DataUrl,
         imageId: savedImage.id,
       },
       {
