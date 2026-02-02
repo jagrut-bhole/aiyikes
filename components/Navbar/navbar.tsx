@@ -113,13 +113,13 @@ export default function Navbar() {
             ) : (
               <>
                 <Link
-                  href="/signin"
+                  href="/login"
                   className="text-white transition-colors font-medium"
                 >
                   Sign In
                 </Link>
                 <Link
-                  href="/signup"
+                  href="/register"
                   className="text-black bg-white px-3 py-2 rounded-3xl font-medium transition-colors"
                 >
                   Get Started

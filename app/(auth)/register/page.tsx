@@ -65,7 +65,7 @@ export default function RegisterPage() {
                 });
                 if (signin?.ok && !signin?.error) {
                     toast.success("Registeration Successfull");
-                    router.push("/dashboard");
+                    router.push("/gallery");
                 }
             } else {
                 toast.error(message);

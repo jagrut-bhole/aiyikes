@@ -116,6 +116,7 @@ export async function getAllImagesWithCreator(currentUserId?: string) {
       pollinationUrl: img.pollinationUrl,
       model: img.model,
       seed: img.seed,
+      userId: img.userId,
       isPublic: img.isPublic,
       likeCount: img.likeCount,
       remixCount: img.remixCount,

@@ -8,13 +8,6 @@ export type LikeResult = {
     error?: string;
 };
 
-/**
- * Toggle like on an image
- * - Creates a like if it doesn't exist
- * - Deletes the like if it already exists
- * - Updates the likeCount on the Image
- * - Invalidates Redis cache for the image
- */
 export async function toggleImageLike(
     userId: string,
     imageId: string
@@ -57,7 +50,7 @@ export async function toggleImageLike(
 
             isLiked = false;
         } else {
-            await prisma.$transaction(async (tx) => {
+            newLikeCount = await prisma.$transaction(async (tx) => {
                 await tx.imageLike.create({
                     data: {
                         userId,
@@ -77,7 +70,7 @@ export async function toggleImageLike(
                     },
                 });
 
-                newLikeCount = updatedImage.likeCount;
+                return updatedImage.likeCount;
             });
 
             isLiked = true;
@@ -101,9 +94,6 @@ export async function toggleImageLike(
     }
 }
 
-/**
- * Check if a user has liked a specific image
- */
 export async function hasUserLikedImage(
     userId: string,
     imageId: string
@@ -125,9 +115,6 @@ export async function hasUserLikedImage(
     }
 }
 
-/**
- * Get all images liked by a user
- */
 export async function getUserLikedImages(userId: string) {
     try {
         const likedImages = await prisma.imageLike.findMany({

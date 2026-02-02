@@ -57,7 +57,7 @@ export default function LoginPage() {
 
       if (result?.ok) {
         toast.success("Login successful");
-        router.push("/dashboard");
+        router.push("/gallery");
       }
     } catch (error) {
       console.log("Error while logging in: ", error);
@@ -146,7 +146,7 @@ export default function LoginPage() {
                 Don&apos;t have an account?{" "}
               </span>
               <Link
-                href="/signup"
+                href="/register"
                 className="font-medium text-white hover:text-gray-300"
               >
                 Sign Up
