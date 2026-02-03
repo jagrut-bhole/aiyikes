@@ -502,14 +502,6 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ imageData, onClose 
               disabled={isRemixing}
               className="w-full bg-[#151515] text-white rounded-full text-sm font-medium transition-colors border border-white/20 pr-12"
             />
-            {promptInput.trim() && !isRemixing && (
-              <button
-                onClick={() => handleRemix(promptInput)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/50 hover:bg-white/60 transition-colors"
-              >
-                Remix
-              </button>
-            )}
           </div>
 
           {/* Show/Hide Prompt button */}

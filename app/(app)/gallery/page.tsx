@@ -85,8 +85,23 @@ export default function GalleryPage() {
 
     const closeModal = () => {
         setSelectedImageId(null);
-        // Refresh images to get updated like counts
-        fetchImages();
+        // Don't refetch - too slow! The modal will handle optimistic updates
+    };
+
+    // Function to update an image's like count optimistically
+    const updateImageLikeCount = (imageId: string, newLikeCount: number) => {
+        setRawImages(prev =>
+            prev.map(img =>
+                img.id === imageId ? { ...img, likeCount: newLikeCount } : img
+            )
+        );
+        setImages(prev =>
+            prev.map(img =>
+                img.id === imageId
+                    ? { ...img, desc: `${rawImages.find(r => r.id === imageId)?.model || ''} • ${newLikeCount} likes` }
+                    : img
+            )
+        );
     };
 
     const selectedImage = rawImages.find(img => img.id === selectedImageId);

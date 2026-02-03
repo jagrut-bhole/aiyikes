@@ -22,13 +22,27 @@ export const CacheKeys = {
 
 // Get Cached Data
 export async function getCachedData<T>(key: string): Promise<T | null> {
+  // Skip Redis if disabled
+  if (process.env.REDIS_ENABLED === 'false') {
+    return null;
+  }
+
   try {
-    const data = await redis.get(key);
-    if (!data) return null;
-    return JSON.parse(data) as T;
+    // Add timeout to prevent Redis from blocking
+    const timeoutPromise = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), 1000) // 1 second timeout
+    );
+
+    const dataPromise = redis.get(key).then(data => {
+      if (!data) return null;
+      return JSON.parse(data) as T;
+    });
+
+    const result = await Promise.race([dataPromise, timeoutPromise]);
+    return result;
   } catch (error) {
     console.error(`Error getting the cache for key ${key}`, error);
-    return null;
+    return null; // Fail gracefully, don't block
   }
 }
 
@@ -38,10 +52,23 @@ export async function setCachedData(
   value: any,
   ttl: number = CACHE_TTL.USER,
 ): Promise<void> {
+  // Skip Redis if disabled
+  if (process.env.REDIS_ENABLED === 'false') {
+    return;
+  }
+
   try {
-    await redis.setex(key, ttl, JSON.stringify(value));
+    // Don't await - fire and forget to avoid blocking
+    const timeoutPromise = new Promise<void>((resolve) =>
+      setTimeout(() => resolve(), 1000)
+    );
+
+    const setPromise = redis.setex(key, ttl, JSON.stringify(value));
+
+    await Promise.race([setPromise, timeoutPromise]);
   } catch (error) {
     console.error(`Error setting cache for key ${key}: `, error);
+    // Don't throw, just log
   }
 }
 
