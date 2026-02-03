@@ -39,6 +39,8 @@ export async function generateImage(options: ImageOptions): Promise<GeneratedIma
 
   const apiKey = process.env.POLLINATION_API_KEY;
 
+  console.log("API Key exists:", !!apiKey, "Length:", apiKey?.length || 0);
+
   if (!apiKey) {
     throw new Error("POLLINATION_API_KEY is not set. Please add it to your .env file.");
   }
@@ -115,6 +117,8 @@ export async function generateRemixImage(options: RemixImageOptions): Promise<Ge
   url += `?${params.toString()}`;
 
   const apiKey = process.env.POLLINATION_API_KEY;
+
+  console.log("API Key exists:", !!apiKey, "Length:", apiKey?.length || 0);
 
   if (!apiKey) {
     throw new Error("POLLINATION_API_KEY is not set. Please add it to your .env file.");
