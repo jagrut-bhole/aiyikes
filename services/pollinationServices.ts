@@ -8,7 +8,7 @@ export interface ImageOptions {
 
 export interface RemixImageOptions {
   prompt: string;
-  originalImageUrl: string; // The pollination URL of the original image
+  originalImageUrl: string;
   seed: number;
 }
 
@@ -65,15 +65,34 @@ export async function generateImage(options: ImageOptions): Promise<GeneratedIma
   } catch (error: any) {
     console.error("Error generating image with Pollination API:", error.message);
 
+    // Log detailed error information for debugging
+    if (error.response) {
+      console.error("Response status:", error.response.status);
+      console.error("Response data:", error.response.data);
+      console.error("Request URL:", url);
+    }
+
+    if (error.response?.status === 400) {
+      throw new Error("Bad request to Pollinations API. Check your prompt or parameters.");
+    }
+
     if (error.response?.status === 401) {
       throw new Error("Invalid API key. Please check your POLLINATION_API_KEY.");
+    }
+
+    if (error.response?.status === 402) {
+      throw new Error("Insufficient pollen balance. Please check your account at enter.pollinations.ai");
+    }
+
+    if (error.response?.status === 403) {
+      throw new Error("Access denied. You don't have permission to use this model.");
     }
 
     if (error.code === 'ECONNABORTED') {
       throw new Error("Image generation timed out. Please try again.");
     }
 
-    throw new Error("Failed to generate image. Please try again.");
+    throw new Error(`Failed to generate image: ${error.message}`);
   }
 }
 
@@ -125,14 +144,33 @@ export async function generateRemixImage(options: RemixImageOptions): Promise<Ge
   } catch (error: any) {
     console.error("Error generating remix image with Pollination API:", error.message);
 
+    // Log detailed error information for debugging
+    if (error.response) {
+      console.error("Response status:", error.response.status);
+      console.error("Response data:", error.response.data);
+      console.error("Request URL:", url);
+    }
+
+    if (error.response?.status === 400) {
+      throw new Error("Bad request to Pollinations API. Check your prompt or parameters.");
+    }
+
     if (error.response?.status === 401) {
       throw new Error("Invalid API key. Please check your POLLINATION_API_KEY.");
+    }
+
+    if (error.response?.status === 402) {
+      throw new Error("Insufficient pollen balance. Please check your account at enter.pollinations.ai");
+    }
+
+    if (error.response?.status === 403) {
+      throw new Error("Access denied. You don't have permission to use this model.");
     }
 
     if (error.code === 'ECONNABORTED') {
       throw new Error("Remix generation timed out. Please try again.");
     }
 
-    throw new Error("Failed to generate remix. Please try again.");
+    throw new Error(`Failed to generate remix: ${error.message}`);
   }
 }
